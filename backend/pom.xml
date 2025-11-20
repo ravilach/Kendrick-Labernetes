@@ -2,12 +2,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.wizkhalubernetes</groupId>
-    <artifactId>wiz-khalubernetes-backend</artifactId>
+    <groupId>com.kendricklabernetes</groupId>
+    <artifactId>kendrick-labernetes-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>Wiz Khalubernetes Backend</name>
-    <description>Spring Boot backend for Wiz Khalubernetes</description>
+    <name>Kendrick-Labernetes Backend</name>
+    <description>Spring Boot backend for Kendrick-Labernetes</description>
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>

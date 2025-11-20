@@ -1,14 +1,14 @@
 // REST API controller for quote operations and node info
-package com.wizkhalubernetes.controller;
+package com.kendricklabernetes.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-import com.wizkhalubernetes.model.mongo.QuoteMongo;
-import com.wizkhalubernetes.model.h2.QuoteH2;
-import com.wizkhalubernetes.repository.mongo.QuoteMongoRepository;
-import com.wizkhalubernetes.repository.h2.QuoteH2Repository;
+import com.kendricklabernetes.model.mongo.QuoteMongo;
+import com.kendricklabernetes.model.h2.QuoteH2;
+import com.kendricklabernetes.repository.mongo.QuoteMongoRepository;
+import com.kendricklabernetes.repository.h2.QuoteH2Repository;
 import org.springframework.dao.DataAccessResourceFailureException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
@@ -28,7 +28,7 @@ public class QuoteController {
     private static final Logger logger = LoggerFactory.getLogger(QuoteController.class);
 
     @Autowired
-    private com.wizkhalubernetes.prometheus.QuoteMetricsService quoteMetricsService;
+    private com.kendricklabernetes.prometheus.QuoteMetricsService quoteMetricsService;
     @Autowired(required = false)
     @org.springframework.beans.factory.annotation.Qualifier("mongoQuoteRepository")
     private QuoteMongoRepository quoteMongoRepository;
@@ -38,13 +38,6 @@ public class QuoteController {
     @Autowired
     private org.springframework.core.env.Environment env;
 
-    /**
-     * Adds a new quote and captures the user's IP address from the HTTP request.
-     *
-     * @param payload JSON payload containing the quote text
-     * @param request HttpServletRequest to extract user IP
-     * @return ResponseEntity with saved quote or error details
-     */
     @PostMapping("/quotes")
     public ResponseEntity<?> addQuote(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         logger.info("addQuote called with payload: {}", payload);
@@ -178,9 +171,6 @@ public class QuoteController {
         }
     }
 
-    /**
-     * Returns all quotes from the active DB (H2 or Mongo).
-     */
     @GetMapping("/quotes")
     public ResponseEntity<?> getAllQuotes() {
         logger.info("getAllQuotes called");
@@ -218,9 +208,6 @@ public class QuoteController {
         }
     }
 
-    /**
-     * Deletes a quote by ID from the active DB (H2 or Mongo).
-     */
     @DeleteMapping("/quotes/{id}")
     public ResponseEntity<?> deleteQuote(@PathVariable("id") String id) {
         logger.info("deleteQuote called with id: {}", id);
@@ -259,7 +246,7 @@ public class QuoteController {
         logger.info("getNodeInfo called");
         Map<String, Object> info = new HashMap<>();
         info.put("hostname", getHostName());
-        info.put("app", "Wiz Khalubernetes");
+        info.put("app", "Kendrick-Labernetes");
         info.put("os.name", System.getProperty("os.name"));
         info.put("os.version", System.getProperty("os.version"));
         info.put("os.arch", System.getProperty("os.arch"));
@@ -268,13 +255,9 @@ public class QuoteController {
         info.put("totalMemoryMB", Runtime.getRuntime().totalMemory() / (1024 * 1024));
         info.put("freeMemoryMB", Runtime.getRuntime().freeMemory() / (1024 * 1024));
         info.put("timestamp", Instant.now().toString());
-        // Add more Docker/container-specific info if needed
         return info;
     }
 
-    /**
-     * Returns the current DB status (H2 or Mongo) for frontend UX.
-     */
     @GetMapping("/dbstatus")
     public Map<String, String> getDbStatus() {
         logger.info("getDbStatus called");
@@ -309,9 +292,6 @@ public class QuoteController {
         }
     }
 
-    /**
-     * Returns the next quote number based on the active DB.
-     */
     private int getNextQuoteNumber() {
         logger.info("getNextQuoteNumber called");
         boolean useMongo = Boolean.parseBoolean(env.getProperty("REMOTE_DB", "false"));

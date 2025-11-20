@@ -1,6 +1,6 @@
-// Main Spring Boot application class for Wiz Khalubernetes
+// Main Spring Boot application class for Kendrick Labernetes
 // Includes fallback MongoTemplate bean for resilience
-package com.wizkhalubernetes;
+package com.kendricklabernetes;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,7 +12,7 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.env.Environment;
 import org.springframework.lang.NonNull;
 
-class WizKhalubernetesConfigSelector implements ImportSelector, EnvironmentAware {
+class KendrickLabernetesConfigSelector implements ImportSelector, EnvironmentAware {
     private Environment environment;
     @Override
     public void setEnvironment(@NonNull Environment environment) {
@@ -21,24 +21,24 @@ class WizKhalubernetesConfigSelector implements ImportSelector, EnvironmentAware
     public @NonNull String[] selectImports(@NonNull AnnotationMetadata importingClassMetadata) {
         String remoteDb = environment != null ? environment.getProperty("REMOTE_DB", "false") : "false";
         if ("true".equalsIgnoreCase(remoteDb)) {
-            return new String[]{"com.wizkhalubernetes.config.mongo.MongoConfig"};
+            return new String[]{"com.kendricklabernetes.config.mongo.MongoConfig"};
         } else {
-            return new String[]{"com.wizkhalubernetes.config.h2.H2Config"};
+            return new String[]{"com.kendricklabernetes.config.h2.H2Config"};
         }
     }
 }
 /**
- * Main Spring Boot application class for Wiz Khalubernetes.
+ * Main Spring Boot application class for Kendrick-Labernetes.
  * Dynamically imports MongoDB or H2 config based on REMOTE_DB flag.
  */
 @SpringBootApplication
-@Import(WizKhalubernetesConfigSelector.class)
-public class WizKhalubernetesApplication {
+@Import(KendrickLabernetesConfigSelector.class)
+public class KendrickLabernetesApplication {
     /**
      * Application entry point.
      * @param args command-line arguments
      */
     public static void main(String[] args) {
-        SpringApplication.run(WizKhalubernetesApplication.class, args);
+        SpringApplication.run(KendrickLabernetesApplication.class, args);
     }
 }

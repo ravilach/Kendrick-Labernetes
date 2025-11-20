@@ -111,7 +111,17 @@ This repository no longer provides automated CI/CD workflows or Terraform provis
 
 ---
 
-## 6 Switching Between Local DB (H2) and Remote MongoDB
+## 5. Harness CI/CD Example
+
+A sample Harness CI/CD pipeline is provided in `harness/sample-harness-pipeline.yaml`. It contains a small CI pipeline that builds the backend (Maven), builds the frontend (npm), builds and pushes a Docker image, and a CD pipeline that applies Kubernetes manifests.
+
+Quick usage notes:
+- Review and replace the placeholder variables in `harness/sample-harness-pipeline.yaml` (Docker repo, registry, Harness secret/connector refs, and `KUBECONFIG`).
+- Import the CI section into Harness CI and the CD section into Harness CD (or adapt to your account's pipeline templates).
+- Recommended: create Harness connectors for your Docker registry and Kubernetes cluster, and store sensitive values (Docker password, kubeconfig) as Harness Secrets.
+
+
+## 6. Switching Between Local DB (H2) and Remote MongoDB
 - Use the `REMOTE_DB` environment variable in `deployment.yaml`:
    - `REMOTE_DB: "false"` (default) uses embedded H2 (no external DB required)
    - `REMOTE_DB: "true"` uses remote MongoDB (set `MONGODB_URI` accordingly)

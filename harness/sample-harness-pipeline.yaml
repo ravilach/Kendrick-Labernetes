@@ -1,0 +1,133 @@
+# Sample Harness pipeline (CI + CD) for Kendrick Labernetes
+#
+# This file contains two example pipeline documents (CI and CD) that show a
+# minimal flow: build backend (Maven), build frontend (npm), build/push Docker
+# image, and deploy to Kubernetes using kubectl. Import these as templates in
+# Harness (adjust project/org identifiers, connectors, and secrets to match
+# your Harness account).
+#
+# NOTE: This is a sample/template. Replace placeholders with real Harness
+# connector identifiers, secret identifiers, and environment values before use.
+
+## ---------- CI: Build, Test, and Push Image ----------
+# Import into Harness CI (as a Pipeline) and add required connectors/secrets.
+ci:
+  name: Kendrick Labernetes CI
+  identifier: kendrick_labernetes_ci
+  projectIdentifier: default
+  orgIdentifier: default
+  execution:
+    steps:
+      - step:
+          type: Run
+          name: Build Backend (Maven)
+          identifier: build_backend
+          spec:
+            shell: Bash
+            command: |
+              set -euo pipefail
+              echo "Building backend..."
+              cd backend
+              mvn -B -DskipTests clean package
+
+      - step:
+          type: Run
+          name: Build Frontend
+          identifier: build_frontend
+          spec:
+            shell: Bash
+            command: |
+              set -euo pipefail
+              echo "Building frontend..."
+              cd frontend
+              npm ci --no-audit --legacy-peer-deps
+              npm run build
+
+      - step:
+          type: Run
+          name: Build and Push Docker Image
+          identifier: build_and_push_image
+          spec:
+            shell: Bash
+            command: |
+              set -euo pipefail
+              echo "Building Docker image..."
+              IMAGE_NAME=${DOCKER_REGISTRY}/${DOCKER_REPO}:$DRONE_COMMIT_SHA
+              # Allow override via Harness variables; fall back to tag 'latest'
+              IMAGE_NAME=${IMAGE_NAME:-${DOCKER_REGISTRY}/${DOCKER_REPO}:latest}
+              docker build -t "$IMAGE_NAME" .
+              echo "Logging in to registry..."
+              echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin "$DOCKER_REGISTRY"
+              docker push "$IMAGE_NAME"
+
+      - step:
+          type: Publish
+          name: Publish Image Metadata
+          identifier: publish_image_metadata
+          spec: {}
+
+variables:
+  - name: DOCKER_REGISTRY
+    type: String
+    value: "docker.io"
+  - name: DOCKER_REPO
+    type: String
+    value: "<your-dockerhub-username>/kendrick-labernetes"
+  - name: DOCKER_USERNAME
+    type: String
+    value: "<docker-username>"
+  - name: DOCKER_PASSWORD
+    type: Secret
+    value: "<harness-secret-docker-password>"
+
+## ---------- CD: Deploy to Kubernetes ----------
+# Import this as a separate Harness Deployment pipeline (CD). Provide a K8s
+# connector in Harness and set `K8S_CONNECTOR_REF` to that connector's ID.
+cd:
+  name: Kendrick Labernetes CD
+  identifier: kendrick_labernetes_cd
+  projectIdentifier: default
+  orgIdentifier: default
+  stages:
+    - stage:
+        name: Deploy
+        identifier: deploy
+        type: Deployment
+        spec:
+          service:
+            name: kendrick-labernetes-service
+            spec:
+              artifacts:
+                primary:
+                  type: DockerRegistry
+                  spec:
+                    connectorRef: "<docker-connector-ref>"
+                    imagePath: "${DOCKER_REPO}"
+                    tag: "latest"
+          infrastructure:
+            type: KubernetesDirect
+            spec:
+              connectorRef: "<k8s-connector-ref>"
+              namespace: default
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Apply Kubernetes manifests
+                  identifier: apply_k8s
+                  spec:
+                    shell: Bash
+                    command: |
+                      set -euo pipefail
+                      echo "Applying Kubernetes manifests..."
+                      # Option A: Use the repository manifest
+                      kubectl --kubeconfig "$KUBECONFIG" apply -f deployment.yaml
+                      # Option B: patch image (uncomment to use)
+                      # kubectl set image deployment/kendrick-labernetes kendrick-labernetes=$IMAGE_NAME -n default
+
+variables:
+  - name: KUBECONFIG
+    type: Secret
+    value: "<harness-secret-kubeconfig>"
+
+# End of sample Harness pipeline YAML

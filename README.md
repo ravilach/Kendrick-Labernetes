@@ -1,5 +1,5 @@
 > **Tip:**  
-> To quickly run Wiz Khalubernetes locally, use the pre-built Docker image:  
+> To quickly run Kendrick Labernetes locally, use the pre-built Docker image:  
 > 
 > ```sh
 > docker run -p 80:80 -p 8080:8080 rlachhman/kendrick-labernetes
@@ -209,7 +209,7 @@ This file is included in the container for exercise/demo purposes.
 
 ## 10. How to Expose the Local App in Docker to Ngrok
 
-You can use [ngrok](https://ngrok.com/) to securely expose your local Wiz Khalubernetes app running in Docker to the internet for demos, testing, or remote access.
+You can use [ngrok](https://ngrok.com/) to securely expose your local Kendrick Labernetes app running in Docker to the internet for demos, testing, or remote access.
 
 ### Step-by-Step
 
@@ -252,7 +252,7 @@ You can use [ngrok](https://ngrok.com/) to securely expose your local Wiz Khalub
 
 ## 11. Sample Prometheus Queries
 
-You can use the following Prometheus queries to monitor Wiz Khalubernetes metrics exposed at `/actuator/prometheus`:
+You can use the following Prometheus queries to monitor Kendrick Labernetes metrics exposed at `/actuator/prometheus`:
 
 - **Total quotes created in MongoDB:**
   ```prometheus

@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for Wiz Khalubernetes
+# Multi-stage Dockerfile for Kendrick Labernetes
 # Build frontend
 FROM node:22 AS frontend-build
 WORKDIR /app/frontend

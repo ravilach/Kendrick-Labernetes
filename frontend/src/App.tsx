@@ -1,4 +1,4 @@
-// Main React component for Wiz Khalubernetes UI
+// Main React component for Kendrick Labernetes UI
 // Handles quote submission, displays latest quote, node info, and error handling
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -111,7 +111,7 @@ const App: React.FC = () => {
       }}
     >
       <h1 style={{ fontWeight: 700, fontSize: 40, letterSpacing: 2, marginBottom: 16 }}>
-        Wiz Khalubernetes
+        Kendrick Labernetes
       </h1>
       <form
         onSubmit={handleSubmit}

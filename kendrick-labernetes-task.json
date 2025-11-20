@@ -14,7 +14,7 @@
       ],
       "environment": [
         { "name": "REMOTE_DB", "value": "true" },
-        { "name": "MONGODB_URI", "value": "mongodb://<mongo-host>:27017/wizquotes" }
+        { "name": "MONGODB_URI", "value": "mongodb://<mongo-host>:27017/kendrickquotes" }
       ]
     }
   ]

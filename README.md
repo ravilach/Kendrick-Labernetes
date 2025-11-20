@@ -26,7 +26,7 @@ Sample Terraform configuration is provided in the `terraform/` folder to create 
 
 # Kendrick-Labernetes
 
-A full-stack Spring Boot + React app for sharing Wiz Khalifa quotes, designed for cloud-native deployment and flexible database options.
+A full-stack Spring Boot + React app for sharing Kendrick Lamar quotes, designed for cloud-native deployment and flexible database options.
 
 ---
 
@@ -88,8 +88,8 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 # docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=false kendrick-labernetes
 
 # For remote MongoDB
-# Example: no auth, using IP address and DB name 'wizquotes'
-# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=true -e MONGODB_URI="mongodb://192.168.1.100:27017/wizquotes" kendrick-labernetes
+# Example: no auth, using IP address and DB name 'kendrickquotes'
+# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=true -e MONGODB_URI="mongodb://192.168.1.100:27017/kendrickquotes" kendrick-labernetes
 ```
 - Access frontend: [http://localhost](http://localhost) (served by nginx on port 80)
 - Access backend API: [http://localhost:8080](http://localhost:8080)
@@ -105,16 +105,16 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 - **Remote MongoDB:**
    - In `backend/src/main/resources/application.properties`, uncomment the line:
       ```properties
-      spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/wizquotes}
+      spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/kendrickquotes}
       # Uncomment this property to use MongoDB (remote or local). Leave commented to use embedded H2 for local/dev.
       ```
    - Or set as environment variable:
       ```sh
-      export SPRING_DATA_MONGODB_URI="mongodb://<username>:<password>@<host>:27017/wizquotes?authSource=admin"
+      export SPRING_DATA_MONGODB_URI="mongodb://<username>:<password>@<host>:27017/kendrickquotes?authSource=admin"
       ```
    - Example for EC2:
       ```properties
-      spring.data.mongodb.uri=mongodb://admin:password@ec2-xx-xx-xx-xx.compute.amazonaws.com:27017/wizquotes?authSource=admin
+      spring.data.mongodb.uri=mongodb://admin:password@ec2-xx-xx-xx-xx.compute.amazonaws.com:27017/kendrickquotes?authSource=admin
       ```
 
 ---

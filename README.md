@@ -9,8 +9,8 @@
 > The app will be available at [http://localhost](http://localhost), served by nginx over port 80.
 
 
-# CI/CD and Infrastructure
-This repository no longer includes the sample GitHub Actions workflows or Terraform configuration. Remove or ignore files in `.github/workflows` and the `terraform/` folder if present in your clone.
+# CI/CD and Infrastructure (Harness)
+You can use Harness for CI/CD — a sample Harness pipeline is provided in `harness/sample-harness-pipeline.yaml`. 
 
 # Kendrick-Labernetes
 

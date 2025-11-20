@@ -1,29 +1,29 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: wiz-khalubernetes
+  name: kendrick-labernetes
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wiz-khalubernetes
-  namespace: wiz-khalubernetes
+  name: kendrick-labernetes
+  namespace: kendrick-labernetes
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: wiz-khalubernetes
+      app: kendrick-labernetes
   template:
     metadata:
       labels:
-        app: wiz-khalubernetes
+        app: kendrick-labernetes
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/actuator/prometheus"
         prometheus.io/port: "8080"
     spec:
       containers:
-        - name: wiz-khalubernetes
+        - name: kendrick-labernetes
           image: <your-docker-image>
           imagePullPolicy: Always
           ports:
@@ -57,12 +57,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: wiz-khalubernetes-lb
-  namespace: wiz-khalubernetes
+  name: kendrick-labernetes-lb
+  namespace: kendrick-labernetes
 spec:
   type: LoadBalancer
   selector:
-    app: wiz-khalubernetes
+    app: kendrick-labernetes
   ports:
     - name: http
       protocol: TCP

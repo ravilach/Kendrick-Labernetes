@@ -2,7 +2,7 @@
 > To quickly run Wiz Khalubernetes locally, use the pre-built Docker image:  
 > 
 > ```sh
-> docker run -p 80:80 -p 8080:8080 rlachhman/wiz-khalubernetes
+> docker run -p 80:80 -p 8080:8080 rlachhman/kendrick-labernetes
 > ```
 > This will start both the frontend (on port 80) and backend (on port 8080) instantly.
 >
@@ -16,7 +16,7 @@ This project includes a sample GitHub Actions workflow to build and push the Doc
 1. Set up your DockerHub credentials as GitHub repository secrets:
    - `DOCKER_USERNAME`
    - `DOCKER_PASSWORD`
-2. On push to `main`, the workflow in `.github/workflows/docker-image.yml` will build and push the image tagged as `wiz-khalubernetes:latest`.
+2. On push to `main`, the workflow in `.github/workflows/docker-image.yml` will build and push the image tagged as `kendrick-labernetes:latest`.
 
 ## Infrastructure: Provision MongoDB EC2 Instance with Terraform
 
@@ -24,7 +24,7 @@ Sample Terraform configuration is provided in the `terraform/` folder to create 
 
 
 
-# Wiz Khalubernetes
+# Kendrick-Labernetes
 
 A full-stack Spring Boot + React app for sharing Wiz Khalifa quotes, designed for cloud-native deployment and flexible database options.
 
@@ -46,7 +46,7 @@ A full-stack Spring Boot + React app for sharing Wiz Khalifa quotes, designed fo
 ```sh
 cd backend
 mvn clean package
-java -jar target/wiz-khalubernetes-backend-0.0.1-SNAPSHOT.jar
+java -jar target/kendrick-labernetes-backend-0.0.1-SNAPSHOT.jar
 ```
 - Default: Uses embedded H2 DB
 - To use MongoDB, set `spring.data.mongodb.uri` in `src/main/resources/application.properties`
@@ -65,16 +65,16 @@ npm start
 
 ### Build Docker Image
 ```sh
-docker build -t wiz-khalubernetes .
+docker build -t kendrick-labernetes .
 ```
-- For amd64: `docker buildx build --platform linux/amd64 -t wiz-khalubernetes .`
-- No cache: `docker buildx build --no-cache --platform linux/amd64 -t wiz-khalubernetes .`
+- For amd64: `docker buildx build --platform linux/amd64 -t kendrick-labernetes .`
+- No cache: `docker buildx build --no-cache --platform linux/amd64 -t kendrick-labernetes .`
 - Prune images: `docker image prune -f && docker builder prune -f`
 
 ### Push Docker Image to DockerHub
 ```sh
-docker tag wiz-khalubernetes <your-dockerhub-username>/wiz-khalubernetes:latest
-docker push <your-dockerhub-username>/wiz-khalubernetes:latest
+docker tag kendrick-labernetes <your-dockerhub-username>/kendrick-labernetes:latest
+docker push <your-dockerhub-username>/kendrick-labernetes:latest
 ```
 - Make sure you are logged in: `docker login`
 - Replace `<your-dockerhub-username>` with your DockerHub username
@@ -83,13 +83,13 @@ docker push <your-dockerhub-username>/wiz-khalubernetes:latest
 ### Run Container
 ```sh
 # For local H2 (default, fast startup)
-docker run -p 80:80 -p 8080:8080 wiz-khalubernetes
+docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 # or explicitly
-# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=false wiz-khalubernetes
+# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=false kendrick-labernetes
 
 # For remote MongoDB
 # Example: no auth, using IP address and DB name 'wizquotes'
-# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=true -e MONGODB_URI="mongodb://192.168.1.100:27017/wizquotes" wiz-khalubernetes
+# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=true -e MONGODB_URI="mongodb://192.168.1.100:27017/wizquotes" kendrick-labernetes
 ```
 - Access frontend: [http://localhost](http://localhost) (served by nginx on port 80)
 - Access backend API: [http://localhost:8080](http://localhost:8080)
@@ -164,7 +164,7 @@ docker run -p 80:80 -p 8080:8080 wiz-khalubernetes
 - After deployment, a LoadBalancer service will expose the app.
 - Get the external IP:
    ```sh
-   kubectl get svc wiz-khalubernetes-lb
+   kubectl get svc kendrick-labernetes-lb
    ```
 - Access the frontend at:
    `http://<EXTERNAL-IP>`
@@ -215,7 +215,7 @@ You can use [ngrok](https://ngrok.com/) to securely expose your local Wiz Khalub
 
 1. **Start your Docker container**
    ```sh
-   docker run -p 80:80 -p 8080:8080 wiz-khalubernetes
+   docker run -p 80:80 -p 8080:8080 kendrick-labernetes
    ```
    - This exposes the frontend on port 80 and backend API on port 8080.
 
@@ -292,8 +292,8 @@ For more advanced queries and dashboarding, consider integrating with Grafana.
 You can control the verbosity of application logs using the `logging.level` property in `backend/src/main/resources/application.properties`:
 
 ```properties
-# Set log level for all classes under com.wizkhalubernetes
-logging.level.com.wizkhalubernetes=INFO
+# Set log level for all classes under com.kendricklabernetes
+logging.level.com.kendricklabernetes=INFO
 # Levels: TRACE, DEBUG, INFO, WARN, ERROR
 ```
 
@@ -301,4 +301,4 @@ Change `INFO` to `DEBUG`, `WARN`, `ERROR`, or `TRACE` as needed to adjust the lo
 
 ---
 
-Feel free to customize and extend Wiz Khalubernetes!
+Feel free to customize and extend Kendrick Labernetes!

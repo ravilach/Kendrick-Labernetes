@@ -1,0 +1,21 @@
+{
+  "family": "kendrick-labernetes-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "containerDefinitions": [
+    {
+      "name": "kendrick-labernetes",
+      "image": "kendrick-labernetes:latest",
+      "portMappings": [
+        { "containerPort": 80, "protocol": "tcp" },
+        { "containerPort": 8080, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "REMOTE_DB", "value": "true" },
+        { "name": "MONGODB_URI", "value": "mongodb://<mongo-host>:27017/wizquotes" }
+      ]
+    }
+  ]
+}

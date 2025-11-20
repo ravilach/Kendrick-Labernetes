@@ -9,20 +9,8 @@
 > The app will be available at [http://localhost](http://localhost), served by nginx over port 80.
 
 
-## CI/CD: Build and Push Docker Image with GitHub Actions
-
-This project includes a sample GitHub Actions workflow to build and push the Docker image to DockerHub on every push to `main`.
-
-1. Set up your DockerHub credentials as GitHub repository secrets:
-   - `DOCKER_USERNAME`
-   - `DOCKER_PASSWORD`
-2. On push to `main`, the workflow in `.github/workflows/docker-image.yml` will build and push the image tagged as `kendrick-labernetes:latest`.
-
-## Infrastructure: Provision MongoDB EC2 Instance with Terraform
-
-Sample Terraform configuration is provided in the `terraform/` folder to create an Amazon EC2 instance and install MongoDB.
-
-
+# CI/CD and Infrastructure
+This repository no longer includes the sample GitHub Actions workflows or Terraform configuration. Remove or ignore files in `.github/workflows` and the `terraform/` folder if present in your clone.
 
 # Kendrick-Labernetes
 
@@ -36,7 +24,7 @@ A full-stack Spring Boot + React app for sharing Kendrick Lamar quotes, designed
 - **Default DB:** Embedded H2 (local/dev)
 - **Production DB:** MongoDB (remote, e.g., EC2)
 - **Metrics:** Prometheus endpoint
-- **Deployment:** Docker, Kubernetes, GitHub Actions
+   - **Deployment:** Docker, Kubernetes
 
 ---
 
@@ -119,16 +107,7 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 
 ---
 
-## 5. GitHub Actions Used to Build and Create the Mongo Instance
-
-
-- **CI/CD:**
-   - `.github/workflows/docker-image.yml` builds and pushes Docker images to DockerHub on every push to `main`.
-   - Secrets required: `DOCKER_USERNAME`, `DOCKER_PASSWORD`
-- **MongoDB Provisioning:**
-   - `.github/workflows/terraform-apply.yml` applies Terraform in the `terraform/` folder to provision a MongoDB EC2 instance automatically.
-   - Required secrets: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, (optional) `AWS_DEFAULT_REGION`
-   - Output: EC2 public IP for MongoDB connection
+This repository no longer provides automated CI/CD workflows or Terraform provisioning steps. If you require CI/CD or infrastructure automation, add your own workflow and Terraform configuration and document them here.
 
 ---
 

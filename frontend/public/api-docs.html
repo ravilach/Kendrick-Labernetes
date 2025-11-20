@@ -65,14 +65,24 @@
     <pre>
 # Example Prometheus queries:
 
+
 # Total quotes created in MongoDB
 sum(db_mongo_create_total)
 
 # Total quotes created in H2
 sum(db_h2_create_total)
 
+# Total quotes created in Postgres
+sum(db_postgres_create_total)
+
 # Total quotes deleted in MongoDB
 sum(db_mongo_delete_total)
+
+# Total quotes deleted in H2
+sum(db_h2_delete_total)
+
+# Total quotes deleted in Postgres
+sum(db_postgres_delete_total)
 
 # JVM memory usage (MB)
 jvm_memory_used_bytes / 1024 / 1024

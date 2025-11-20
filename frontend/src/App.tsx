@@ -2,6 +2,7 @@
 // Handles quote submission, displays latest quote, node info, and error handling
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Admin from './Admin';
 
 // Import Inter font from Google Fonts
 const interFontUrl = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap';
@@ -22,11 +23,11 @@ const App: React.FC = () => {
   const [quote, setQuote] = useState('');
   const [submittedQuote, setSubmittedQuote] = useState<any>(null);
   const [latestQuote, setLatestQuote] = useState<any>(null);
-  const [nodeInfo, setNodeInfo] = useState<any>(null);
-  const [dbStatus, setDbStatus] = useState<{connected: string, type: string, message: string} | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [allQuotes, setAllQuotes] = useState<any[]>([]);
+  const [dbStatusBadge, setDbStatusBadge] = useState<{connected: string, type: string, message: string} | null>(null);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,9 +52,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Initial load for all data
-    axios.get('/api/nodeinfo')
-      .then((res: { data: any }) => setNodeInfo(res.data))
-      .catch(() => setNodeInfo(null));
     axios.get('/api/quotes/latest')
       .then((res: { data: any }) => {
         if (res.data && !(res.data as any).error) {
@@ -63,23 +61,23 @@ const App: React.FC = () => {
         }
       })
       .catch(() => setLatestQuote(null));
-    axios.get('/api/dbstatus')
-      .then((res: { data: any }) => setDbStatus(res.data))
-      .catch(() => setDbStatus(null));
     axios.get('/api/quotes')
       .then((res: { data: any[] }) => setAllQuotes(res.data))
       .catch(() => setAllQuotes([]));
+    // no node/db polling here; Admin panel handles node/db status
+  }, []);
 
-    // Poll nodeinfo and dbstatus every 5 seconds (no blink)
-    const interval = setInterval(() => {
-      axios.get('/api/nodeinfo')
-        .then((res: { data: any }) => setNodeInfo(res.data))
-        .catch(() => {});
+  // Small lightweight DB status polling for header badge
+  useEffect(() => {
+    let mounted = true;
+    const fetchStatus = () => {
       axios.get('/api/dbstatus')
-        .then((res: { data: any }) => setDbStatus(res.data))
-        .catch(() => {});
-    }, 3000);
-    return () => clearInterval(interval);
+        .then((res: { data: any }) => { if (mounted) setDbStatusBadge(res.data); })
+        .catch(() => { if (mounted) setDbStatusBadge(null); });
+    };
+    fetchStatus();
+    const t = setInterval(fetchStatus, 5000);
+    return () => { mounted = false; clearInterval(t); };
   }, []);
 
   const handleDeleteQuote = async (id: number) => {
@@ -100,11 +98,11 @@ const App: React.FC = () => {
   };
 
   return (
-    <div
+      <div
       style={{
         minHeight: '100vh',
         padding: 32,
-        background: 'rgb(2, 84, 236)',
+        background: '#07182B',
         fontFamily: 'Inter, sans-serif',
         color: '#fff',
         boxSizing: 'border-box',
@@ -113,6 +111,20 @@ const App: React.FC = () => {
       <h1 style={{ fontWeight: 700, fontSize: 40, letterSpacing: 2, marginBottom: 16 }}>
         Kendrick Labernetes
       </h1>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, opacity: 0.9 }}>Active DB:</span>
+          <span style={{ padding: '6px 10px', borderRadius: 12, fontWeight: 700, fontSize: 13,
+            background: dbStatusBadge ? (dbStatusBadge.connected === 'true' ? '#1b5e20' : '#7f0000') : '#333',
+            color: '#fff'
+          }}>
+            {dbStatusBadge?.type?.toUpperCase() || 'UNKNOWN'}
+          </span>
+        </div>
+        <button onClick={() => setShowAdmin(s => !s)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 8 }}>
+          {showAdmin ? 'Hide Admin' : 'Show Admin'}
+        </button>
+      </div>
       <form
         onSubmit={handleSubmit}
         style={{ display: 'flex', gap: 12, marginBottom: 24 }}
@@ -204,41 +216,12 @@ const App: React.FC = () => {
         </div>
       </div>
       <footer style={{ marginTop: 48, borderTop: '1px solid #fff', paddingTop: 16, opacity: 0.95 }}>
-        <h3 style={{ fontWeight: 700, fontSize: 22, marginBottom: 12 }}>Node/Application Info</h3>
-        {dbStatus && (
-          <div style={{ marginBottom: 12, color: dbStatus.connected === 'true' ? '#baffba' : '#ffbaba', fontWeight: 600 }}>
-            <span>DB Status: </span>
-            <span>{dbStatus.connected === 'true' ? 'Connected' : 'Not Connected'} ({dbStatus.type})</span>
-            <span style={{ marginLeft: 8, fontWeight: 400, fontSize: 14, color: '#fff' }}>{dbStatus.message}</span>
-            <div style={{ marginTop: 8 }}><strong>Connected DB:</strong> {dbStatus.type}</div>
-          </div>
-        )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
-          {nodeInfo ? (
-            <>
-              <div><strong>Hostname:</strong> {nodeInfo.hostname}</div>
-              <div><strong>App:</strong> {nodeInfo.app}</div>
-              <div><strong>OS:</strong> {nodeInfo['os.name']} {nodeInfo['os.version']} ({nodeInfo['os.arch']})</div>
-              <div><strong>Available Processors:</strong> {nodeInfo.availableProcessors}</div>
-              <div><strong>Max Memory:</strong> {nodeInfo.maxMemoryMB} MB</div>
-              <div><strong>Total Memory:</strong> {nodeInfo.totalMemoryMB} MB</div>
-              <div><strong>Free Memory:</strong> {nodeInfo.freeMemoryMB} MB</div>
-              <div><strong>Timestamp:</strong> {nodeInfo.timestamp}</div>
-            </>
-          ) : (
-            <div style={{ color: '#fff', opacity: 0.7 }}>
-              Unable to load node info. Backend or database may be unavailable.<br />
-              <span style={{ fontSize: 14, color: '#baffba' }}>
-                Retrying every 3 seconds...
-              </span>
-            </div>
-          )}
-        </div>
         <div style={{ marginTop: 32, textAlign: 'center' }}>
           <a href="/api-docs.html" target="_blank" rel="noopener noreferrer" style={{ color: '#baffba', fontWeight: 700, fontSize: 18, textDecoration: 'underline' }}>
             API Docs
           </a>
         </div>
+        {showAdmin && <Admin />}
       </footer>
     </div>
   );

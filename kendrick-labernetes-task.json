@@ -13,8 +13,12 @@
         { "containerPort": 8080, "protocol": "tcp" }
       ],
       "environment": [
-        { "name": "REMOTE_DB", "value": "true" },
-        { "name": "MONGODB_URI", "value": "mongodb://<mongo-host>:27017/kendrickquotes" }
+        { "name": "MONGODB_URI", "value": "mongodb://<mongo-host>:27017/kendrickquotes" },
+        { "name": "DB_TYPE", "value": "mongo" },
+        { "name": "SPRING_PROFILES_ACTIVE", "value": "prod" },
+        { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://<postgres-host>:5432/<database>" },
+        { "name": "SPRING_DATASOURCE_USERNAME", "value": "<db-username>" },
+        { "name": "SPRING_DATASOURCE_PASSWORD", "value": "<db-password>" }
       ]
     }
   ]

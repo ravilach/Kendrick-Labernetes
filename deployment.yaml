@@ -32,10 +32,17 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
-            - name: REMOTE_DB
-              value: "false" # Set to "true" for remote MongoDB, "false" for local H2
+            - name: DB_TYPE
+              value: "h2" # Set to "h2" | "mongo" | "postgres". Override to choose DB type.
             - name: MONGODB_URI
               value: "mongodb://<username>:<password>@<ec2-public-ip>:27017/<database>?authSource=admin"
+            # Postgres connection (populate when using DB_TYPE=postgres)
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://<postgres-host>:5432/<database>"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "<db-username>"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "<db-password>"
           resources:
             requests:
               memory: "512Mi"

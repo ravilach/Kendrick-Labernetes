@@ -46,5 +46,5 @@ EXPOSE 8080 80
 # Default container profile to `h2` for local-friendly behavior. Override with
 # `-e SPRING_PROFILES_ACTIVE=...` when running in k8s/production.
 ENV SPRING_PROFILES_ACTIVE=h2
-ENV REMOTE_DB=false
+ENV DB_TYPE=h2
 CMD ["sh", "-c", "nginx -g 'daemon off;' & java -jar app.jar"]

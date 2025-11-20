@@ -1,6 +1,7 @@
 com/kendricklabernetes/controller/QuoteController.class
 com/kendricklabernetes/model/h2/QuoteH2.class
 com/kendricklabernetes/prometheus/NodeHealthIndicator.class
+com/kendricklabernetes/config/postgres/PostgresConfig.class
 com/kendricklabernetes/KendrickLabernetesApplication.class
 com/kendricklabernetes/repository/h2/QuoteH2Repository.class
 com/kendricklabernetes/config/h2/H2Config.class

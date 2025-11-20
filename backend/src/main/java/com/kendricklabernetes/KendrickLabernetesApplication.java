@@ -18,9 +18,11 @@ class KendrickLabernetesConfigSelector implements ImportSelector, EnvironmentAwa
         this.environment = environment;
     }
     public @NonNull String[] selectImports(@NonNull AnnotationMetadata importingClassMetadata) {
-        String remoteDb = environment != null ? environment.getProperty("REMOTE_DB", "false") : "false";
-        if ("true".equalsIgnoreCase(remoteDb)) {
+        String dbType = environment != null ? environment.getProperty("DB_TYPE", "h2") : "h2";
+        if ("mongo".equalsIgnoreCase(dbType)) {
             return new String[]{"com.kendricklabernetes.config.mongo.MongoConfig"};
+        } else if ("postgres".equalsIgnoreCase(dbType)) {
+            return new String[]{"com.kendricklabernetes.config.postgres.PostgresConfig"};
         } else {
             return new String[]{"com.kendricklabernetes.config.h2.H2Config"};
         }
@@ -28,7 +30,7 @@ class KendrickLabernetesConfigSelector implements ImportSelector, EnvironmentAwa
 }
 /**
  * Main Spring Boot application class for Kendrick-Labernetes.
- * Dynamically imports MongoDB or H2 config based on REMOTE_DB flag.
+ * Dynamically imports MongoDB, Postgres or H2 config based on `DB_TYPE`.
  */
 @SpringBootApplication
 @Import(KendrickLabernetesConfigSelector.class)

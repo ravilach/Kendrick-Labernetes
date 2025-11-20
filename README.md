@@ -23,6 +23,7 @@ A full-stack Spring Boot + React app for sharing Kendrick Lamar quotes, designed
 - **Frontend:** React + TypeScript
 - **Default DB:** Embedded H2 (local/dev)
 - **Production DB:** MongoDB (remote, e.g., EC2)
+ - **Optional DB:** Postgres (supported via `postgres` profile)
 - **Metrics:** Prometheus endpoint
    - **Deployment:** Docker, Kubernetes
 
@@ -38,6 +39,17 @@ java -jar target/kendrick-labernetes-backend-0.0.1-SNAPSHOT.jar
 ```
 - Default: Uses embedded H2 DB
 - To use MongoDB, set `spring.data.mongodb.uri` in `src/main/resources/application.properties`
+ - To use Postgres or select the DB explicitly, set the `DB_TYPE` environment variable (supported values: `h2`, `mongo`, `postgres`).
+   - Use `DB_TYPE` to choose the database (values: `h2`, `mongo`, `postgres`).
+    - Example (Postgres dev using local PG):
+       ```sh
+       export DB_TYPE=postgres
+       export SPRING_PROFILES_ACTIVE=postgres
+       export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/kendrick
+       export SPRING_DATASOURCE_USERNAME=postgres
+       export SPRING_DATASOURCE_PASSWORD=postgres
+       java -jar target/kendrick-labernetes-backend-0.0.1-SNAPSHOT.jar
+       ```
 
 ### Frontend (React)
 ```sh
@@ -73,17 +85,23 @@ docker push <your-dockerhub-username>/kendrick-labernetes:latest
 # For local H2 (default, fast startup)
 docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 # or explicitly
-# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=false kendrick-labernetes
+# docker run -p 80:80 -p 8080:8080 -e DB_TYPE=h2 kendrick-labernetes
 
 # For remote MongoDB
 # Example: no auth, using IP address and DB name 'kendrickquotes'
-# docker run -p 80:80 -p 8080:8080 -e REMOTE_DB=true -e MONGODB_URI="mongodb://192.168.1.100:27017/kendrickquotes" kendrick-labernetes
+# docker run -p 80:80 -p 8080:8080 -e DB_TYPE=mongo -e MONGODB_URI="mongodb://192.168.1.100:27017/kendrickquotes" kendrick-labernetes
+
+# For Postgres (example)
+# Start a local Postgres container (dev):
+# docker run --name kl-postgres -e POSTGRES_DB=kendrick -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:15
+# Run app with Postgres (use DB_TYPE and profile):
+# docker run -p 80:80 -p 8080:8080 -e DB_TYPE=postgres -e SPRING_PROFILES_ACTIVE=postgres -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/kendrick -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=postgres kendrick-labernetes
 ```
 - Access frontend: [http://localhost](http://localhost) (served by nginx on port 80)
 - Access backend API: [http://localhost:8080](http://localhost:8080)
 
 > **Note:** If you only map port 8080, the frontend will not be available. Always map port 80 for the UI.
-> **Default behavior:** If REMOTE_DB is not set, the app uses local H2 for fastest startup.
+> **Default behavior:** If `DB_TYPE` is not set, the app defaults to `h2` (embedded) for fastest startup.
 
 ---
 
@@ -105,9 +123,6 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
       spring.data.mongodb.uri=mongodb://admin:password@ec2-xx-xx-xx-xx.compute.amazonaws.com:27017/kendrickquotes?authSource=admin
       ```
 
----
-
-This repository no longer provides automated CI/CD workflows or Terraform provisioning steps. If you require CI/CD or infrastructure automation, add your own workflow and Terraform configuration and document them here.
 
 ---
 
@@ -122,9 +137,10 @@ Quick usage notes:
 
 
 ## 6. Switching Between Local DB (H2) and Remote MongoDB
-- Use the `REMOTE_DB` environment variable in `deployment.yaml`:
-   - `REMOTE_DB: "false"` (default) uses embedded H2 (no external DB required)
-   - `REMOTE_DB: "true"` uses remote MongoDB (set `MONGODB_URI` accordingly)
+ - Use the `DB_TYPE` environment variable in `deployment.yaml`:
+   - `DB_TYPE: "h2"` (default) uses embedded H2 (no external DB required)
+   - `DB_TYPE: "mongo"` uses remote MongoDB (set `MONGODB_URI` accordingly)
+   - `DB_TYPE: "postgres"` uses Postgres (provide datasource envs or secrets)
 - To switch, edit `deployment.yaml` and redeploy:
    ```sh
    kubectl apply -f deployment.yaml
@@ -138,7 +154,7 @@ Quick usage notes:
 ### Deploy to Kubernetes
 1. Edit `deployment.yaml`:
    - Set the `image` field to your built/pushed Docker image.
-   - Set `REMOTE_DB` and `MONGODB_URI` environment variables as needed (see section 6).
+   - Set `DB_TYPE` and `MONGODB_URI` (when using Mongo) or Postgres datasource envs as needed (see section 6).
 2. Apply the deployment:
    ```sh
    kubectl apply -f deployment.yaml

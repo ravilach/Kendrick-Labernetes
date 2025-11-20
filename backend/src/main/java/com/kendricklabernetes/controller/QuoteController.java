@@ -29,21 +29,20 @@ public class QuoteController {
 
     @Autowired
     private com.kendricklabernetes.prometheus.QuoteMetricsService quoteMetricsService;
-    @Autowired(required = false)
-    @org.springframework.beans.factory.annotation.Qualifier("mongoQuoteRepository")
-    private QuoteMongoRepository quoteMongoRepository;
-    @Autowired(required = false)
-    @org.springframework.beans.factory.annotation.Qualifier("h2QuoteRepository")
-    private QuoteH2Repository quoteJpaRepository;
     @Autowired
     private org.springframework.core.env.Environment env;
+    @Autowired
+    private org.springframework.context.ApplicationContext ctx;
 
     @PostMapping("/quotes")
     public ResponseEntity<?> addQuote(@RequestBody Map<String, String> payload, HttpServletRequest request) {
         logger.info("addQuote called with payload: {}", payload);
         boolean useMongo = Boolean.parseBoolean(env.getProperty("REMOTE_DB", "false"));
         if (useMongo) {
-            if (quoteMongoRepository == null) {
+            QuoteMongoRepository repo = null;
+            try {
+                repo = ctx.getBean(QuoteMongoRepository.class);
+            } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
                 logger.info("MongoDB repository unavailable in addQuote");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(errorResponse("MongoDB connection unavailable at configured URL."));
@@ -60,9 +59,10 @@ public class QuoteController {
                 quote.setIp(ip);
                 quote.setQuoteNumber(getNextQuoteNumber());
                 try {
-                    QuoteMongo saved = quoteMongoRepository.save(quote);
+                    logger.info("Attempting to save new quote to MongoDB: {}", quote.getQuote());
+                    QuoteMongo saved = repo.save(quote);
                     quoteMetricsService.incrementMongoCreate();
-                    logger.info("Successfully saved quote to MongoDB: {}", saved);
+                    logger.info("Saved quote to MongoDB with id: {}", saved.getId());
                     return ResponseEntity.ok(saved);
                 } catch (Exception e) {
                     logger.error("Failed to save quote to MongoDB: {}", e.getMessage(), e);
@@ -75,7 +75,10 @@ public class QuoteController {
                     .body(errorResponse("Failed to save quote: " + e.getMessage()));
             }
         } else {
-            if (quoteJpaRepository == null) {
+            QuoteH2Repository repo = null;
+            try {
+                repo = ctx.getBean(QuoteH2Repository.class);
+            } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
                 logger.info("H2/JPA repository unavailable in addQuote");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(errorResponse("H2/JPA repository unavailable."));
@@ -91,9 +94,10 @@ public class QuoteController {
                 }
                 quote.setIp(ip);
                 quote.setQuoteNumber(getNextQuoteNumber());
-                QuoteH2 saved = quoteJpaRepository.save(quote);
+                logger.info("Attempting to save new quote to H2: {}", quote.getQuote());
+                QuoteH2 saved = repo.save(quote);
                 quoteMetricsService.incrementH2Create();
-                logger.info("Successfully saved quote to H2: {}", saved);
+                logger.info("Saved quote to H2 with id: {}", saved.getId());
                 return ResponseEntity.ok(saved);
             } catch (Exception e) {
                 logger.error("Exception in addQuote (H2): {}", e.getMessage(), e);
@@ -108,13 +112,16 @@ public class QuoteController {
         logger.info("getLatestQuote called");
         boolean useMongo = Boolean.parseBoolean(env.getProperty("REMOTE_DB", "false"));
         if (useMongo) {
-            if (quoteMongoRepository == null) {
+            QuoteMongoRepository repo = null;
+            try {
+                repo = ctx.getBean(QuoteMongoRepository.class);
+            } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
                 logger.info("MongoDB repository unavailable in getLatestQuote");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(errorResponse("MongoDB connection unavailable at configured URL."));
             }
             try {
-                long count = quoteMongoRepository.count();
+                long count = repo.count();
                 logger.info("MongoDB quote count: {}", count);
                 if (count == 0) {
                     logger.info("No quotes found in MongoDB");
@@ -122,7 +129,8 @@ public class QuoteController {
                 }
                 QuoteMongo latest = null;
                 try {
-                    latest = quoteMongoRepository.findAll()
+                    logger.info("Fetching all quotes from MongoDB to compute latest");
+                    latest = repo.findAll()
                         .stream()
                         .max((a, b) -> Integer.compare(a.getQuoteNumber(), b.getQuoteNumber()))
                         .orElse(null);
@@ -144,19 +152,23 @@ public class QuoteController {
                     .body(errorResponse("Unexpected error: " + ex.getMessage()));
             }
         } else {
-            if (quoteJpaRepository == null) {
+            QuoteH2Repository repo = null;
+            try {
+                repo = ctx.getBean(QuoteH2Repository.class);
+            } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
                 logger.info("H2/JPA repository unavailable in getLatestQuote");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(errorResponse("H2/JPA repository unavailable."));
             }
             try {
-                long count = quoteJpaRepository.count();
+                long count = repo.count();
                 logger.info("H2 quote count: {}", count);
                 if (count == 0) {
                     logger.info("No quotes found in H2");
                     return ResponseEntity.ok().body(null);
                 }
-                QuoteH2 latest = quoteJpaRepository.findAll()
+                logger.info("Fetching all quotes from H2 to compute latest");
+                QuoteH2 latest = repo.findAll()
                     .stream()
                     .max((a, b) -> Integer.compare(a.getQuoteNumber(), b.getQuoteNumber()))
                     .orElse(null);
@@ -176,30 +188,36 @@ public class QuoteController {
         logger.info("getAllQuotes called");
         boolean useMongo = Boolean.parseBoolean(env.getProperty("REMOTE_DB", "false"));
         if (useMongo) {
-            if (quoteMongoRepository == null) {
+            QuoteMongoRepository repo = getMongoRepo();
+            if (repo == null) {
                 logger.info("MongoDB repository unavailable in getAllQuotes");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(errorResponse("MongoDB connection unavailable at configured URL."));
             }
             try {
+                logger.info("Fetching all quotes from MongoDB");
+                var all = repo.findAll();
                 quoteMetricsService.incrementMongoRead();
-                logger.info("Fetched all quotes from MongoDB");
-                return ResponseEntity.ok(quoteMongoRepository.findAll());
+                logger.info("Fetched {} quotes from MongoDB", all.size());
+                return ResponseEntity.ok(all);
             } catch (Exception e) {
                 logger.error("Exception in getAllQuotes (Mongo): {}", e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(errorResponse("Failed to fetch quotes: " + e.getMessage()));
             }
         } else {
-            if (quoteJpaRepository == null) {
+            QuoteH2Repository repo = getH2Repo();
+            if (repo == null) {
                 logger.info("H2/JPA repository unavailable in getAllQuotes");
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(errorResponse("H2/JPA repository unavailable."));
             }
             try {
+                logger.info("Fetching all quotes from H2");
+                var all = repo.findAll();
                 quoteMetricsService.incrementH2Read();
-                logger.info("Fetched all quotes from H2");
-                return ResponseEntity.ok(quoteJpaRepository.findAll());
+                logger.info("Fetched {} quotes from H2", all.size());
+                return ResponseEntity.ok(all);
             } catch (Exception e) {
                 logger.error("Exception in getAllQuotes (H2): {}", e.getMessage(), e);
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -214,22 +232,26 @@ public class QuoteController {
         boolean useMongo = Boolean.parseBoolean(env.getProperty("REMOTE_DB", "false"));
         try {
             if (useMongo) {
-                if (quoteMongoRepository == null) {
+                QuoteMongoRepository repo = getMongoRepo();
+                if (repo == null) {
                     logger.info("MongoDB repository unavailable in deleteQuote");
                     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                         .body(errorResponse("MongoDB connection unavailable at configured URL."));
                 }
-                quoteMongoRepository.deleteById(id);
+                logger.info("Deleting quote id {} from MongoDB", id);
+                repo.deleteById(id);
                 quoteMetricsService.incrementMongoDelete();
                 logger.info("Deleted quote from MongoDB with id: {}", id);
                 return ResponseEntity.ok().body("Deleted");
             } else {
-                if (quoteJpaRepository == null) {
+                QuoteH2Repository repo = getH2Repo();
+                if (repo == null) {
                     logger.info("H2/JPA repository unavailable in deleteQuote");
                     return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                         .body(errorResponse("H2/JPA repository unavailable."));
                 }
-                quoteJpaRepository.deleteById(Long.parseLong(id));
+                logger.info("Deleting quote id {} from H2", id);
+                repo.deleteById(Long.parseLong(id));
                 quoteMetricsService.incrementH2Delete();
                 logger.info("Deleted quote from H2 with id: {}", id);
                 return ResponseEntity.ok().body("Deleted");
@@ -265,12 +287,12 @@ public class QuoteController {
         Map<String, String> status = new HashMap<>();
         if (useMongo) {
             status.put("type", "MongoDB");
-            status.put("connected", quoteMongoRepository != null ? "true" : "false");
-            status.put("message", quoteMongoRepository != null ? "Connected to MongoDB" : "MongoDB repository unavailable");
+            status.put("connected", getMongoRepo() != null ? "true" : "false");
+            status.put("message", getMongoRepo() != null ? "Connected to MongoDB" : "MongoDB repository unavailable");
         } else {
             status.put("type", "H2");
-            status.put("connected", quoteJpaRepository != null ? "true" : "false");
-            status.put("message", quoteJpaRepository != null ? "Connected to H2" : "H2 repository unavailable");
+            status.put("connected", getH2Repo() != null ? "true" : "false");
+            status.put("message", getH2Repo() != null ? "Connected to H2" : "H2 repository unavailable");
         }
         return status;
     }
@@ -295,12 +317,28 @@ public class QuoteController {
     private int getNextQuoteNumber() {
         logger.info("getNextQuoteNumber called");
         boolean useMongo = Boolean.parseBoolean(env.getProperty("REMOTE_DB", "false"));
-        if (useMongo && quoteMongoRepository != null) {
-            return (int) (quoteMongoRepository.count() + 1);
-        } else if (quoteJpaRepository != null) {
-            return (int) (quoteJpaRepository.count() + 1);
+        if (useMongo && getMongoRepo() != null) {
+            return (int) (getMongoRepo().count() + 1);
+        } else if (getH2Repo() != null) {
+            return (int) (getH2Repo().count() + 1);
         } else {
             return 1;
+        }
+    }
+
+    private QuoteMongoRepository getMongoRepo() {
+        try {
+            return ctx.getBean(QuoteMongoRepository.class);
+        } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
+            return null;
+        }
+    }
+
+    private QuoteH2Repository getH2Repo() {
+        try {
+            return ctx.getBean(QuoteH2Repository.class);
+        } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
+            return null;
         }
     }
 }

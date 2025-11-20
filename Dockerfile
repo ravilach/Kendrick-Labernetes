@@ -43,6 +43,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN find /etc/nginx/conf.d/ -type f ! -name 'default.conf' -delete
 RUN [ ! -d /etc/nginx/sites-enabled ] || rm -rf /etc/nginx/sites-enabled/*
 EXPOSE 8080 80
-ENV SPRING_PROFILES_ACTIVE=prod
+# Default container profile to `h2` for local-friendly behavior. Override with
+# `-e SPRING_PROFILES_ACTIVE=...` when running in k8s/production.
+ENV SPRING_PROFILES_ACTIVE=h2
 ENV REMOTE_DB=false
 CMD ["sh", "-c", "nginx -g 'daemon off;' & java -jar app.jar"]

@@ -1,5 +1,4 @@
 // Main Spring Boot application class for Kendrick Labernetes
-// Includes fallback MongoTemplate bean for resilience
 package com.kendricklabernetes;
 
 import org.springframework.boot.SpringApplication;

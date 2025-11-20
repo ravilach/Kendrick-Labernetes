@@ -121,7 +121,7 @@ const App: React.FC = () => {
           type="text"
           value={quote}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuote(e.target.value)}
-          placeholder="Enter your favorite Wiz Khalifa quote"
+          placeholder="Enter your favorite Kendrick Lamar quote"
           style={{
             width: 400,
             padding: '12px 16px',

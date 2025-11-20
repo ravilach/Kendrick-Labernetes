@@ -188,7 +188,7 @@ This file is included in the container for exercise/demo purposes.
 ## 9. API Endpoints
 | Endpoint                      | Method | Description                                 |
 |-------------------------------|--------|---------------------------------------------|
-| `/api/quotes`                 | POST   | Submit a new Wiz Khalifa quote              |
+| `/api/quotes`                 | POST   | Submit a new Kendrick Lamar quote              |
 | `/api/quotes/latest`          | GET    | Get the latest quote                        |
 | `/api/nodeinfo`               | GET    | Get node/system/application info            |
 | `/api/dbstatus`               | GET    | Get current DB connection status/type.      |

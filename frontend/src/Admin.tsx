@@ -1,3 +1,4 @@
+// Admin panel UI: change DB type request, set connection strings, and run read-only explorers
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -104,7 +105,7 @@ const Admin: React.FC = () => {
     <div style={{ marginTop: 32, padding: 20, borderRadius: 12, background: 'rgba(255,255,255,0.04)' }}>
       <h2 style={{ fontWeight: 800, marginBottom: 12 }}>Admin</h2>
 
-      {/* Primary connection string area */}
+      {/* Primary connection string area (used by explorers and connection tests) */}
       <div style={{ background: 'rgba(255,255,255,0.02)', padding: 14, borderRadius: 10 }}>
         <label style={{ display: 'block', fontWeight: 700 }}>Set Connection String</label>
         <input value={conn} onChange={e => setConn(e.target.value)} placeholder="jdbc:postgresql://... or mongodb://..." style={{ width: '100%', padding: 10, marginTop: 8 }} />
@@ -120,7 +121,7 @@ const Admin: React.FC = () => {
           </select>
           <button onClick={setType} disabled={loading}>Set DB Type</button>
           <div style={{ flex: 1 }} />
-          <button onClick={testSql} disabled={loading}>Test PostGres</button>
+          <button onClick={testSql} disabled={loading}>Test Postgres</button>
           <button onClick={testMongo} disabled={loading}>Test Mongo</button>
         </div>
       </div>
@@ -132,8 +133,8 @@ const Admin: React.FC = () => {
         {/* Postgres Explorer */}
         <section style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.08)' }}>
           <h4 style={{ margin: 0, fontWeight: 700 }}>Postgres Explorer</h4>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button onClick={runSql} disabled={loading}>Run SQL (SELECT only)</button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={runSql} disabled={loading}>Run SQL (SELECT only — validated)</button>
             <input value={sqlQuery} onChange={e => setSqlQuery(e.target.value)} style={{ flex: 1, padding: 8 }} />
           </div>
           {sqlResult && (

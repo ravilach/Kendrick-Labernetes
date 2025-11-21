@@ -1,4 +1,4 @@
-// REST API controller for quote operations and node info
+// REST API controller for quote operations and node/application info
 package com.kendricklabernetes.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * REST API controller for quote operations and node/application info endpoints.
- * Handles persistence across MongoDB, H2 and Postgres based on `DB_TYPE`.
+ *
+ * Behavior:
+ * - Routes requests to the appropriate persistence implementation depending on the
+ *   configured `DB_TYPE` property (values: `h2` | `mongo` | `postgres`).
+ * - Exposes lightweight node and DB status information used by the frontend Admin UI.
  */
 @RestController
 @RequestMapping("/api")
@@ -106,7 +110,7 @@ public class QuoteController {
                         .body(errorResponse("Failed to save quote: " + e.getMessage()));
                 }
             } else {
-                // H2 path
+                // H2/JPA path (embedded H2 database)
                 QuoteH2Repository repo = getJpaRepo();
                 if (repo == null) {
                     logger.info("JPA repository unavailable in addQuote for dbType={}", dbType);
@@ -390,7 +394,7 @@ public class QuoteController {
             status.put("connected", getMongoRepo() != null ? "true" : "false");
             status.put("message", getMongoRepo() != null ? "Connected to Mongo" : "Mongo repository unavailable");
         } else if ("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) {
-            // Report actual DB name (Postgres or H2)
+            // Report the concrete DB type (Postgres or H2) and whether the JPA repo is available
             status.put("type", "postgres".equalsIgnoreCase(dbType) ? "Postgres" : "H2");
             status.put("connected", getJpaRepo() != null ? "true" : "false");
             status.put("message", getJpaRepo() != null ? "Connected to JPA-backed DB" : "JPA repository unavailable");

@@ -1,5 +1,5 @@
-// Main React component for Kendrick Labernetes UI
-// Handles quote submission, displays latest quote, node info, and error handling
+// Main React component for the Kendrick Labernetes UI.
+// Provides quote submission, latest/all quotes views, and a header DB status badge.
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Admin from './Admin';
@@ -120,7 +120,7 @@ const App: React.FC = () => {
           }}>
             {dbStatusBadge?.type || 'UNKNOWN'}
           </span>
-          {/* No JPA indicator — Active DB is one of H2 / Mongo / Postgres */}
+          {/* Active DB badge: shows one of H2 / Mongo / Postgres */}
         </div>
         <button onClick={() => setShowAdmin(s => !s)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 8 }}>
           {showAdmin ? 'Hide Admin' : 'Show Admin'}

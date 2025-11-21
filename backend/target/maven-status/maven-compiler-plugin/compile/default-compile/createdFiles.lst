@@ -1,4 +1,6 @@
 com/kendricklabernetes/controller/QuoteController.class
+com/kendricklabernetes/model/postgres/QuotePostgres.class
+com/kendricklabernetes/controller/AdminController.class
 com/kendricklabernetes/model/h2/QuoteH2.class
 com/kendricklabernetes/prometheus/NodeHealthIndicator.class
 com/kendricklabernetes/config/postgres/PostgresConfig.class
@@ -9,6 +11,7 @@ com/kendricklabernetes/KendrickLabernetesConfigSelector.class
 com/kendricklabernetes/model/mongo/QuoteMongo.class
 com/kendricklabernetes/prometheus/MetricsConfig.class
 com/kendricklabernetes/model/Quote.class
+com/kendricklabernetes/repository/postgres/QuotePostgresRepository.class
 com/kendricklabernetes/controller/CustomErrorController.class
 com/kendricklabernetes/repository/mongo/QuoteMongoRepository.class
 com/kendricklabernetes/prometheus/QuoteMetricsService.class

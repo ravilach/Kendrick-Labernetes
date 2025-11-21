@@ -29,16 +29,25 @@ spec:
           ports:
             - containerPort: 80
             - containerPort: 8080
+          # Database configuration notes:
+          # - DB_TYPE controls which persistence implementation the application uses.
+          #   Allowed values: "h2" | "mongo" | "postgres".
+          # - Default for local development is H2 (embedded, no external DB required).
+          # - When using Postgres, set DB_TYPE=postgres AND set SPRING_PROFILES_ACTIVE=postgres
+          #   so Spring Boot activates the Postgres profile and datasource autoconfiguration.
+          # - When using Mongo, set DB_TYPE=mongo and provide a valid MONGODB_URI.
+          # - After changing DB_TYPE or datasource envs you must redeploy/restart the app
+          #   so the selected profile/configuration is picked up.
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: "prod"
+              value: "prod" # Change to 'postgres' when deploying with Postgres and SPRING_DATASOURCE_* set
             - name: DB_TYPE
-              value: "h2" # Set to "h2" | "mongo" | "postgres". Override to choose DB type.
+              value: "h2" # Set to "h2" | "mongo" | "postgres" to select active persistence
             - name: MONGODB_URI
-              value: "mongodb://<username>:<password>@<ec2-public-ip>:27017/<database>?authSource=admin"
-            # Postgres connection (populate when using DB_TYPE=postgres)
+              value: "mongodb://<username>:<password>@<ec2-public-ip>:27017/<database>?authSource=admin" # Required when DB_TYPE=mongo
+            # Postgres connection (populate and set SPRING_PROFILES_ACTIVE=postgres when using DB_TYPE=postgres)
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://<postgres-host>:5432/<database>"
+              value: "jdbc:postgresql://<postgres-host>:5432/<database>" # e.g. jdbc:postgresql://postgres:5432/kendrick
             - name: SPRING_DATASOURCE_USERNAME
               value: "<db-username>"
             - name: SPRING_DATASOURCE_PASSWORD

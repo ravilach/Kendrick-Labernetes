@@ -1,4 +1,4 @@
-// Main Spring Boot application class for Kendrick Labernetes
+// Main Spring Boot application class for the Kendrick Labernetes application
 package com.kendricklabernetes;
 
 import org.springframework.boot.SpringApplication;
@@ -29,8 +29,11 @@ class KendrickLabernetesConfigSelector implements ImportSelector, EnvironmentAwa
     }
 }
 /**
- * Main Spring Boot application class for Kendrick-Labernetes.
- * Dynamically imports MongoDB, Postgres or H2 config based on `DB_TYPE`.
+ * Main Spring Boot application class for Kendrick Labernetes.
+ *
+ * This class uses an ImportSelector to dynamically import the configuration
+ * class for the chosen persistence implementation based on the `DB_TYPE`
+ * environment/property (supported values: `h2`, `mongo`, `postgres`).
  */
 @SpringBootApplication
 @Import(KendrickLabernetesConfigSelector.class)

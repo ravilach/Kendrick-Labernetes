@@ -1,0 +1,6 @@
+{
+  "deprecated": true,
+  "message": "This file has been replaced by `kendrick-labernetes-task.json`. Please use that file instead and delete this deprecated file.",
+  "replacedBy": "kendrick-labernetes-task.json",
+  "notes": "Database configuration notes:\n- DB_TYPE controls which persistence the app uses: 'h2' | 'mongo' | 'postgres'. Default for local dev is 'h2'.\n- For Postgres: set DB_TYPE=postgres AND SPRING_PROFILES_ACTIVE=postgres, and provide SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD.\n- For Mongo: set DB_TYPE=mongo and provide MONGODB_URI (e.g. mongodb://user:pass@host:27017/kendrickquotes?authSource=admin).\n- Changing DB_TYPE or profile requires redeploy/restart so Spring picks up the correct configuration.\n- Do not commit production credentials to source control; use secrets/values from your CI/CD tooling."
+}

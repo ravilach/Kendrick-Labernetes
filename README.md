@@ -334,13 +334,6 @@ You can use the following Prometheus queries to monitor Kendrick Labernetes metr
 
 For more advanced queries and dashboarding, consider integrating with Grafana.
 
----
-
-## Development Notes
-- Backend: Spring Boot (Java 17)
-- Frontend: React + TypeScript
-- MongoDB: Used for persistence
-- Prometheus: Metrics exposed at `/actuator/prometheus`
 
 ---
 
@@ -355,6 +348,78 @@ logging.level.com.kendricklabernetes=INFO
 ```
 
 Change `INFO` to `DEBUG`, `WARN`, `ERROR`, or `TRACE` as needed to adjust the logging verbosity.
+
+---
+
+## 13. Troubleshooting
+
+Quick actionable tips for common problems when running Kendrick Labernetes locally or in Kubernetes.
+
+- Backend fails to start / cannot connect to DB:
+   - Verify `DB_TYPE` is set to the intended value (`h2` | `mongo` | `postgres`). If unset, the app defaults to `h2`.
+   - For Postgres make sure `SPRING_PROFILES_ACTIVE=postgres` is set so Spring Boot enables the Postgres profile.
+   - Check the JDBC or Mongo URI values and credentials. Example checks:
+      ```sh
+      # Check an environment variable your process sees
+      echo "$SPRING_DATASOURCE_URL"
+      # Test PostgreSQL connectivity from the host
+      pg_isready -h <host> -p 5432
+      # Test Mongo connectivity from the host
+      mongo --quiet --eval 'db.runCommand({ ping: 1 })' "$MONGODB_URI"
+      ```
+   - In Kubernetes, inspect pod events and logs:
+      ```sh
+      kubectl describe pod <pod-name>
+      kubectl logs <pod-name> -c kendrick-labernetes
+      ```
+
+- Frontend build errors (TypeScript/React):
+   - Ensure Node.js and npm versions match project expectations (use `nvm` if needed).
+      ```sh
+      node -v && npm -v
+      cd frontend
+      npm install
+      npm run build
+      ```
+   - If a compile error references `Admin.tsx` or duplicate identifiers, ensure there is only one `Admin.tsx` file in `src/` and no conflicting exports.
+
+- App cannot reach backend API (CORS / ports / nginx):
+   - If running with Docker locally, map both ports: `-p 80:80 -p 8080:8080` so the frontend (nginx) and backend are exposed.
+   - For direct backend access, use `http://localhost:8080` and check `curl http://localhost:8080/api/quotes`.
+   - In Kubernetes, if `Service` is a LoadBalancer, check `kubectl get svc` for external IP.
+
+- Prometheus metrics not scraping:
+   - Verify pod annotations exist (`prometheus.io/scrape`, `prometheus.io/path`, `prometheus.io/port`) and the `Service` exposes port 8080.
+   - Confirm `/actuator/prometheus` returns metrics:
+      ```sh
+      curl http://<pod-or-service-ip>:8080/actuator/prometheus | head
+      ```
+
+- Admin endpoints / connection tests:
+   - Use the Admin UI (`Show Admin`) or the API paths under `/api/admin/*` to test DB connectivity and run read-only SQL/Mongo explorers.
+   - Note: calling `/api/admin/set-db-type` only records the requested type in the app — a redeploy/restart with the chosen `DB_TYPE` and profile is required to switch the active persistence layer.
+
+- Debugging in Docker or Kubernetes:
+   - Docker:
+      ```sh
+      docker ps
+      docker logs <container-id>
+      docker exec -it <container-id> sh
+      ```
+   - Kubernetes port-forwarding for quick local access to the backend:
+      ```sh
+      kubectl port-forward svc/kendrick-labernetes-lb 8080:8080
+      # then open http://localhost:8080
+      ```
+
+- Permission / credential issues:
+   - Check that secrets are mounted correctly and that your CI/CD or K8s Secret contains the right keys (e.g. `datasource-url`, `username`, `password` used in the README examples).
+
+- Still stuck? Collect useful diagnostic output to share:
+   - `kubectl describe pod <pod-name>`
+   - `kubectl logs <pod-name> -c kendrick-labernetes` or `docker logs <container-id>`
+   - Backend startup logs (look for datasource or bean initialization errors)
+   - Frontend build stdout/stderr
 
 ---
 

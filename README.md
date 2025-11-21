@@ -38,7 +38,8 @@ mvn clean package
 java -jar target/kendrick-labernetes-backend-0.0.1-SNAPSHOT.jar
 ```
 - Default: Uses embedded H2 DB
-- To use MongoDB, set `spring.data.mongodb.uri` in `src/main/resources/application.properties`
+- To use MongoDB, either set `MONGODB_URI` as an environment variable or enable the `mongo` profile.
+   The Mongo-specific fallback is defined in `src/main/resources/application-mongo.properties`.
  - To use Postgres or select the DB explicitly, set the `DB_TYPE` environment variable (supported values: `h2`, `mongo`, `postgres`).
    - Use `DB_TYPE` to choose the database (values: `h2`, `mongo`, `postgres`).
     - Example (Postgres dev using local PG):
@@ -107,15 +108,14 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 
 ## 4. Changing the Connection String (Local/Remote MongoDB)
 
-   - In `backend/src/main/resources/application.properties`, uncomment the line:
-      ```properties
-      spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/kendrickquotes}
-      # Uncomment this property to use MongoDB (remote or local). Leave commented to use embedded H2 for local/dev.
-      ```
-   - Or set as environment variable:
+   - Mongo settings are provided by `application-mongo.properties` (loaded when the `mongo` profile is active).
+     You can also provide the connection string via the `MONGODB_URI` environment variable.
+     Example (enable the mongo profile and set the env var):
       ```sh
-      export SPRING_DATA_MONGODB_URI="mongodb://<username>:<password>@<host>:27017/kendrickquotes?authSource=admin"
+      export SPRING_PROFILES_ACTIVE=mongo
+      export MONGODB_URI="mongodb://<username>:<password>@<host>:27017/kendrickquotes?authSource=admin"
       ```
+     The local/default fallback is defined in `backend/src/main/resources/application-mongo.properties`.
    - Example for EC2:
       ```properties
       spring.data.mongodb.uri=mongodb://admin:password@ec2-xx-xx-xx-xx.compute.amazonaws.com:27017/kendrickquotes?authSource=admin

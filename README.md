@@ -233,20 +233,20 @@ Quick usage notes:
 ---
 
 
-## 8. How to Access notes.txt Locally in Docker and via Remote Kubernetes
+## 8. How to Access welcome.txt Locally in Docker and via Remote Kubernetes
 
 ### In Docker Container
 ```sh
 docker ps  # Get container ID
 docker exec -it <container_id> sh
-cat notes.txt
+cat welcome.txt
 ```
 
 ### In Kubernetes Pod
 ```sh
 kubectl get pods  # Get pod name
 kubectl exec -it <pod_name> -- sh
-cat notes.txt
+cat welcome.txt
 ```
 
 This file is included in the container for exercise/demo purposes.

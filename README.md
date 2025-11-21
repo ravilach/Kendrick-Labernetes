@@ -107,8 +107,6 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
 
 ## 4. Changing the Connection String (Local/Remote MongoDB)
 
-- **Default:** Embedded H2 DB (no config needed)
-- **Remote MongoDB:**
    - In `backend/src/main/resources/application.properties`, uncomment the line:
       ```properties
       spring.data.mongodb.uri=${MONGODB_URI:mongodb://localhost:27017/kendrickquotes}
@@ -122,6 +120,60 @@ docker run -p 80:80 -p 8080:8080 kendrick-labernetes
       ```properties
       spring.data.mongodb.uri=mongodb://admin:password@ec2-xx-xx-xx-xx.compute.amazonaws.com:27017/kendrickquotes?authSource=admin
       ```
+
+### Remote Postgres
+
+- To use a remote Postgres instance, set the application to use the Postgres profile and provide the JDBC connection information. Use `DB_TYPE=postgres` and `SPRING_PROFILES_ACTIVE=postgres` so Spring Boot enables the Postgres datasource configuration.
+
+- Example environment variables (EC2-hosted Postgres):
+   ```sh
+   export DB_TYPE=postgres
+   export SPRING_PROFILES_ACTIVE=postgres
+   export SPRING_DATASOURCE_URL=jdbc:postgresql://ec2-xx-xx-xx-xx.compute.amazonaws.com:5432/kendrick
+   export SPRING_DATASOURCE_USERNAME=postgres
+   export SPRING_DATASOURCE_PASSWORD=your_password_here
+   ```
+
+- Kubernetes Postgres (on-cluster): when Postgres is deployed into the same Kubernetes namespace, you can point to the service name directly. Example if your Postgres Service is `postgres`:
+   ```sh
+   # From within the cluster or pods in the same namespace
+   export DB_TYPE=postgres
+   export SPRING_PROFILES_ACTIVE=postgres
+   export SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/kendrick
+   export SPRING_DATASOURCE_USERNAME=postgres
+   export SPRING_DATASOURCE_PASSWORD=your_password_here
+   ```
+
+- Kubernetes Postgres (off-cluster / external): when Postgres runs outside the cluster (EC2, RDS, etc.) use the external host or load balancer DNS/IP. Example:
+   ```sh
+   export DB_TYPE=postgres
+   export SPRING_PROFILES_ACTIVE=postgres
+   export SPRING_DATASOURCE_URL=jdbc:postgresql://external-postgres-host.example.com:5432/kendrick
+   export SPRING_DATASOURCE_USERNAME=postgres
+   export SPRING_DATASOURCE_PASSWORD=your_password_here
+   ```
+
+- Recommended: do NOT hardcode credentials in manifests. Use Kubernetes `Secret` objects and mount or reference them as environment variables in `deployment.yaml` (via `valueFrom.secretKeyRef`). For example:
+   ```yaml
+   env:
+      - name: SPRING_DATASOURCE_URL
+         valueFrom:
+            secretKeyRef:
+               name: kendrick-postgres-secret
+               key: datasource-url
+      - name: SPRING_DATASOURCE_USERNAME
+         valueFrom:
+            secretKeyRef:
+               name: kendrick-postgres-secret
+               key: username
+      - name: SPRING_DATASOURCE_PASSWORD
+         valueFrom:
+            secretKeyRef:
+               name: kendrick-postgres-secret
+               key: password
+   ```
+
+   This keeps credentials out of source control and lets your CI/CD tooling inject secrets at deploy time.
 
 
 ---

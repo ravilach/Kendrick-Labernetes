@@ -118,8 +118,9 @@ const App: React.FC = () => {
             background: dbStatusBadge ? (dbStatusBadge.connected === 'true' ? '#1b5e20' : '#7f0000') : '#333',
             color: '#fff'
           }}>
-            {dbStatusBadge?.type?.toUpperCase() || 'UNKNOWN'}
+            {dbStatusBadge?.type || 'UNKNOWN'}
           </span>
+          {/* No JPA indicator — Active DB is one of H2 / Mongo / Postgres */}
         </div>
         <button onClick={() => setShowAdmin(s => !s)} style={{ marginLeft: 'auto', padding: '8px 12px', borderRadius: 8 }}>
           {showAdmin ? 'Hide Admin' : 'Show Admin'}

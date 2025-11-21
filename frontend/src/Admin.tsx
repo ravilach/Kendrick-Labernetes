@@ -6,10 +6,10 @@ const Admin: React.FC = () => {
   const [conn, setConn] = useState<string>('');
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [sqlQuery, setSqlQuery] = useState<string>('SELECT 1');
+  const [sqlQuery, setSqlQuery] = useState<string>('SELECT id, quote, timestamp FROM quote_postgres ORDER BY quoteNumber DESC LIMIT 25');
   const [sqlResult, setSqlResult] = useState<any>(null);
-  const [mongoDb, setMongoDb] = useState<string>('test');
-  const [mongoCollection, setMongoCollection] = useState<string>('');
+  const [mongoDb, setMongoDb] = useState<string>('kendrickquotes');
+  const [mongoCollection, setMongoCollection] = useState<string>('quotes');
   const [mongoDocs, setMongoDocs] = useState<string[] | null>(null);
   const [h2Rows, setH2Rows] = useState<any[] | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -106,7 +106,7 @@ const Admin: React.FC = () => {
 
       {/* Primary connection string area */}
       <div style={{ background: 'rgba(255,255,255,0.02)', padding: 14, borderRadius: 10 }}>
-        <label style={{ display: 'block', fontWeight: 700 }}>Connection String</label>
+        <label style={{ display: 'block', fontWeight: 700 }}>Set Connection String</label>
         <input value={conn} onChange={e => setConn(e.target.value)} placeholder="jdbc:postgresql://... or mongodb://..." style={{ width: '100%', padding: 10, marginTop: 8 }} />
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <input value={username} onChange={e => setUsername(e.target.value)} placeholder="username" style={{ flex: 1, padding: 8 }} />
@@ -120,7 +120,7 @@ const Admin: React.FC = () => {
           </select>
           <button onClick={setType} disabled={loading}>Set DB Type</button>
           <div style={{ flex: 1 }} />
-          <button onClick={testSql} disabled={loading}>Test SQL</button>
+          <button onClick={testSql} disabled={loading}>Test PostGres</button>
           <button onClick={testMongo} disabled={loading}>Test Mongo</button>
         </div>
       </div>
@@ -129,9 +129,9 @@ const Admin: React.FC = () => {
       <div style={{ marginTop: 18 }}>
         <h3 style={{ fontWeight: 800 }}>Database Explorers</h3>
 
-        {/* SQL Explorer */}
+        {/* Postgres Explorer */}
         <section style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.08)' }}>
-          <h4 style={{ margin: 0, fontWeight: 700 }}>SQL Explorer</h4>
+          <h4 style={{ margin: 0, fontWeight: 700 }}>Postgres Explorer</h4>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button onClick={runSql} disabled={loading}>Run SQL (SELECT only)</button>
             <input value={sqlQuery} onChange={e => setSqlQuery(e.target.value)} style={{ flex: 1, padding: 8 }} />
@@ -165,10 +165,9 @@ const Admin: React.FC = () => {
         <section style={{ marginTop: 12, padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.06)' }}>
           <h4 style={{ margin: 0, fontWeight: 700 }}>Mongo Explorer</h4>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <input value={mongoDb} onChange={e => setMongoDb(e.target.value)} placeholder="database" style={{ padding: 8 }} />
-            <input value={mongoCollection} onChange={e => setMongoCollection(e.target.value)} placeholder="collection" style={{ padding: 8 }} />
-            <button onClick={testMongo} disabled={loading}>Test Mongo Ping</button>
-            <button onClick={exploreMongo} disabled={loading}>Explore Collection</button>
+            <input value={mongoDb} onChange={e => setMongoDb(e.target.value)} placeholder="database (e.g. kendrickquotes)" style={{ padding: 8 }} />
+            <input value={mongoCollection} onChange={e => setMongoCollection(e.target.value)} placeholder="collection (e.g. quotes)" style={{ padding: 8 }} />
+            <button onClick={exploreMongo} disabled={loading}>Explore Collection (first 25)</button>
           </div>
           {mongoDocs && (
             <div style={{ marginTop: 12, maxHeight: 240, overflow: 'auto', background: '#021627', padding: 12, borderRadius: 8 }}>

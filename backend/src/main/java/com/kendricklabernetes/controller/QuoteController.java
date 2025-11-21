@@ -7,8 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import com.kendricklabernetes.model.mongo.QuoteMongo;
 import com.kendricklabernetes.model.h2.QuoteH2;
+import com.kendricklabernetes.model.postgres.QuotePostgres;
 import com.kendricklabernetes.repository.mongo.QuoteMongoRepository;
 import com.kendricklabernetes.repository.h2.QuoteH2Repository;
+import com.kendricklabernetes.repository.postgres.QuotePostgresRepository;
 import org.springframework.dao.DataAccessResourceFailureException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
@@ -75,37 +77,63 @@ public class QuoteController {
                     .body(errorResponse("Failed to save quote: " + e.getMessage()));
             }
         } else if ("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) {
-            // For both H2 and Postgres we use the JPA repository (QuoteH2 entity + QuoteH2Repository)
-            QuoteH2Repository repo = getJpaRepo();
-            if (repo == null) {
-                logger.info("JPA repository unavailable in addQuote for dbType={}", dbType);
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(errorResponse("JPA repository unavailable."));
-            }
-            try {
-                String quoteText = payload.get("quote");
-                QuoteH2 quote = new QuoteH2();
-                quote.setQuote(quoteText);
-                quote.setTimestamp(Instant.now().toString());
-                String ip = request.getHeader("X-Forwarded-For");
-                if (ip == null || ip.isEmpty()) {
-                    ip = request.getRemoteAddr();
+            if ("postgres".equalsIgnoreCase(dbType)) {
+                QuotePostgresRepository repo = getPostgresRepo();
+                if (repo == null) {
+                    logger.info("Postgres repository unavailable in addQuote");
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorResponse("Postgres repository unavailable."));
                 }
-                quote.setIp(ip);
-                quote.setQuoteNumber(getNextQuoteNumber());
-                logger.info("Attempting to save new quote to {}: {}", dbType.toUpperCase(), quote.getQuote());
-                QuoteH2 saved = repo.save(quote);
-                if ("postgres".equalsIgnoreCase(dbType)) {
+                try {
+                    String quoteText = payload.get("quote");
+                    QuotePostgres quote = new QuotePostgres();
+                    quote.setQuote(quoteText);
+                    quote.setTimestamp(Instant.now().toString());
+                    String ip = request.getHeader("X-Forwarded-For");
+                    if (ip == null || ip.isEmpty()) {
+                        ip = request.getRemoteAddr();
+                    }
+                    quote.setIp(ip);
+                    quote.setQuoteNumber(getNextQuoteNumber());
+                    logger.info("Attempting to save new quote to POSTGRES: {}", quote.getQuote());
+                    QuotePostgres saved = repo.save(quote);
                     quoteMetricsService.incrementPostgresCreate();
-                } else {
-                    quoteMetricsService.incrementH2Create();
+                    logger.info("Saved quote to POSTGRES with id: {}", saved.getId());
+                    return ResponseEntity.ok(saved);
+                } catch (Exception e) {
+                    logger.error("Exception in addQuote (postgres): {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResponse("Failed to save quote: " + e.getMessage()));
                 }
-                logger.info("Saved quote to {} with id: {}", dbType.toUpperCase(), saved.getId());
-                return ResponseEntity.ok(saved);
-            } catch (Exception e) {
-                logger.error("Exception in addQuote ({}): {}", dbType, e.getMessage(), e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse("Failed to save quote: " + e.getMessage()));
+            } else {
+                // H2 path
+                QuoteH2Repository repo = getJpaRepo();
+                if (repo == null) {
+                    logger.info("JPA repository unavailable in addQuote for dbType={}", dbType);
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorResponse("JPA repository unavailable."));
+                }
+                try {
+                    String quoteText = payload.get("quote");
+                    QuoteH2 quote = new QuoteH2();
+                    quote.setQuote(quoteText);
+                    quote.setTimestamp(Instant.now().toString());
+                    String ip = request.getHeader("X-Forwarded-For");
+                    if (ip == null || ip.isEmpty()) {
+                        ip = request.getRemoteAddr();
+                    }
+                    quote.setIp(ip);
+                    quote.setQuoteNumber(getNextQuoteNumber());
+                    logger.info("Attempting to save new quote to H2: {}", quote.getQuote());
+                    QuoteH2 saved = repo.save(quote);
+                    quoteMetricsService.incrementH2Create();
+                    logger.info("Saved quote to H2 with id: {}", saved.getId());
+                    return ResponseEntity.ok(saved);
+                } catch (Exception e) {
+                    logger.error("Exception in addQuote (h2): {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResponse("Failed to save quote: " + e.getMessage()));
+                }
             }
         } else {
             logger.warn("Unknown DB_TYPE='{}' in addQuote", dbType);
@@ -159,31 +187,52 @@ public class QuoteController {
                     .body(errorResponse("Unexpected error: " + ex.getMessage()));
             }
         } else if ("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) {
-            QuoteH2Repository repo = getJpaRepo();
-            if (repo == null) {
-                logger.info("JPA repository unavailable in getLatestQuote for dbType={}", dbType);
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(errorResponse("JPA repository unavailable."));
-            }
-            try {
-                long count = repo.count();
-                logger.info("{} quote count: {}", dbType.toUpperCase(), count);
-                if (count == 0) {
-                    logger.info("No quotes found in {}", dbType.toUpperCase());
-                    return ResponseEntity.ok().body(null);
+            if ("postgres".equalsIgnoreCase(dbType)) {
+                QuotePostgresRepository repo = getPostgresRepo();
+                if (repo == null) {
+                    logger.info("Postgres repository unavailable in getLatestQuote");
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorResponse("Postgres repository unavailable."));
                 }
-                logger.info("Fetching all quotes from {} to compute latest", dbType.toUpperCase());
-                QuoteH2 latest = repo.findAll()
-                    .stream()
-                    .max((a, b) -> Integer.compare(a.getQuoteNumber(), b.getQuoteNumber()))
-                    .orElse(null);
-                if ("postgres".equalsIgnoreCase(dbType)) quoteMetricsService.incrementPostgresRead(); else quoteMetricsService.incrementH2Read();
-                logger.info("Fetched latest quote from {}: {}", dbType.toUpperCase(), latest);
-                return ResponseEntity.ok(latest);
-            } catch (Exception e) {
-                logger.error("Exception in getLatestQuote ({}): {}", dbType, e.getMessage(), e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse("Failed to fetch latest quote: " + e.getMessage()));
+                try {
+                    long count = repo.count();
+                    logger.info("POSTGRES quote count: {}", count);
+                    if (count == 0) return ResponseEntity.ok().body(null);
+                    QuotePostgres latest = repo.findAll()
+                        .stream()
+                        .max((a, b) -> Integer.compare(a.getQuoteNumber(), b.getQuoteNumber()))
+                        .orElse(null);
+                    quoteMetricsService.incrementPostgresRead();
+                    logger.info("Fetched latest quote from POSTGRES: {}", latest);
+                    return ResponseEntity.ok(latest);
+                } catch (Exception e) {
+                    logger.error("Exception in getLatestQuote (postgres): {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResponse("Failed to fetch latest quote: " + e.getMessage()));
+                }
+            } else {
+                QuoteH2Repository repo = getJpaRepo();
+                if (repo == null) {
+                    logger.info("JPA repository unavailable in getLatestQuote for dbType={}", dbType);
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorResponse("JPA repository unavailable."));
+                }
+                try {
+                    long count = repo.count();
+                    logger.info("H2 quote count: {}", count);
+                    if (count == 0) return ResponseEntity.ok().body(null);
+                    QuoteH2 latest = repo.findAll()
+                        .stream()
+                        .max((a, b) -> Integer.compare(a.getQuoteNumber(), b.getQuoteNumber()))
+                        .orElse(null);
+                    quoteMetricsService.incrementH2Read();
+                    logger.info("Fetched latest quote from H2: {}", latest);
+                    return ResponseEntity.ok(latest);
+                } catch (Exception e) {
+                    logger.error("Exception in getLatestQuote (h2): {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResponse("Failed to fetch latest quote: " + e.getMessage()));
+                }
             }
         } else {
             logger.warn("Unknown DB_TYPE='{}' in getLatestQuote", dbType);
@@ -215,22 +264,42 @@ public class QuoteController {
                     .body(errorResponse("Failed to fetch quotes: " + e.getMessage()));
             }
         } else if ("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) {
-            QuoteH2Repository repo = getJpaRepo();
-            if (repo == null) {
-                logger.info("JPA repository unavailable in getAllQuotes");
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(errorResponse("JPA repository unavailable."));
-            }
-            try {
-                logger.info("Fetching all quotes from {}", dbType.toUpperCase());
-                var all = repo.findAll();
-                if ("postgres".equalsIgnoreCase(dbType)) quoteMetricsService.incrementPostgresRead(); else quoteMetricsService.incrementH2Read();
-                logger.info("Fetched {} quotes from {}", all.size(), dbType.toUpperCase());
-                return ResponseEntity.ok(all);
-            } catch (Exception e) {
-                logger.error("Exception in getAllQuotes ({}): {}", dbType, e.getMessage(), e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(errorResponse("Failed to fetch quotes: " + e.getMessage()));
+            if ("postgres".equalsIgnoreCase(dbType)) {
+                QuotePostgresRepository repo = getPostgresRepo();
+                if (repo == null) {
+                    logger.info("Postgres repository unavailable in getAllQuotes");
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorResponse("Postgres repository unavailable."));
+                }
+                try {
+                    logger.info("Fetching all quotes from POSTGRES");
+                    var all = repo.findAll();
+                    quoteMetricsService.incrementPostgresRead();
+                    logger.info("Fetched {} quotes from POSTGRES", all.size());
+                    return ResponseEntity.ok(all);
+                } catch (Exception e) {
+                    logger.error("Exception in getAllQuotes (postgres): {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResponse("Failed to fetch quotes: " + e.getMessage()));
+                }
+            } else {
+                QuoteH2Repository repo = getJpaRepo();
+                if (repo == null) {
+                    logger.info("JPA repository unavailable in getAllQuotes");
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(errorResponse("JPA repository unavailable."));
+                }
+                try {
+                    logger.info("Fetching all quotes from H2");
+                    var all = repo.findAll();
+                    quoteMetricsService.incrementH2Read();
+                    logger.info("Fetched {} quotes from H2", all.size());
+                    return ResponseEntity.ok(all);
+                } catch (Exception e) {
+                    logger.error("Exception in getAllQuotes (h2): {}", e.getMessage(), e);
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(errorResponse("Failed to fetch quotes: " + e.getMessage()));
+                }
             }
         } else {
             logger.warn("Unknown DB_TYPE='{}' in getAllQuotes", dbType);
@@ -257,17 +326,31 @@ public class QuoteController {
                 logger.info("Deleted quote from MongoDB with id: {}", id);
                 return ResponseEntity.ok().body("Deleted");
             } else if ("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) {
-                QuoteH2Repository repo = getJpaRepo();
-                if (repo == null) {
-                    logger.info("JPA repository unavailable in deleteQuote");
-                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(errorResponse("JPA repository unavailable."));
+                if ("postgres".equalsIgnoreCase(dbType)) {
+                    QuotePostgresRepository repo = getPostgresRepo();
+                    if (repo == null) {
+                        logger.info("Postgres repository unavailable in deleteQuote");
+                        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                            .body(errorResponse("Postgres repository unavailable."));
+                    }
+                    logger.info("Deleting quote id {} from POSTGRES", id);
+                    repo.deleteById(Long.parseLong(id));
+                    quoteMetricsService.incrementPostgresDelete();
+                    logger.info("Deleted quote from POSTGRES with id: {}", id);
+                    return ResponseEntity.ok().body("Deleted");
+                } else {
+                    QuoteH2Repository repo = getJpaRepo();
+                    if (repo == null) {
+                        logger.info("JPA repository unavailable in deleteQuote");
+                        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                            .body(errorResponse("JPA repository unavailable."));
+                    }
+                    logger.info("Deleting quote id {} from H2", id);
+                    repo.deleteById(Long.parseLong(id));
+                    quoteMetricsService.incrementH2Delete();
+                    logger.info("Deleted quote from H2 with id: {}", id);
+                    return ResponseEntity.ok().body("Deleted");
                 }
-                logger.info("Deleting quote id {} from {}", id, dbType.toUpperCase());
-                repo.deleteById(Long.parseLong(id));
-                if ("postgres".equalsIgnoreCase(dbType)) quoteMetricsService.incrementPostgresDelete(); else quoteMetricsService.incrementH2Delete();
-                logger.info("Deleted quote from {} with id: {}", dbType.toUpperCase(), id);
-                return ResponseEntity.ok().body("Deleted");
             } else {
                 logger.warn("Unknown DB_TYPE='{}' in deleteQuote", dbType);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -303,11 +386,12 @@ public class QuoteController {
         String dbType = resolveDbType();
         Map<String, String> status = new HashMap<>();
         if ("mongo".equalsIgnoreCase(dbType)) {
-            status.put("type", "MongoDB");
+            status.put("type", "Mongo");
             status.put("connected", getMongoRepo() != null ? "true" : "false");
-            status.put("message", getMongoRepo() != null ? "Connected to MongoDB" : "MongoDB repository unavailable");
+            status.put("message", getMongoRepo() != null ? "Connected to Mongo" : "Mongo repository unavailable");
         } else if ("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) {
-            status.put("type", "JPA");
+            // Report actual DB name (Postgres or H2)
+            status.put("type", "postgres".equalsIgnoreCase(dbType) ? "Postgres" : "H2");
             status.put("connected", getJpaRepo() != null ? "true" : "false");
             status.put("message", getJpaRepo() != null ? "Connected to JPA-backed DB" : "JPA repository unavailable");
         } else {
@@ -340,7 +424,9 @@ public class QuoteController {
         String dbType = resolveDbType();
         if ("mongo".equalsIgnoreCase(dbType) && getMongoRepo() != null) {
             return (int) (getMongoRepo().count() + 1);
-        } else if (("postgres".equalsIgnoreCase(dbType) || "h2".equalsIgnoreCase(dbType)) && getJpaRepo() != null) {
+        } else if ("postgres".equalsIgnoreCase(dbType) && getPostgresRepo() != null) {
+            return (int) (getPostgresRepo().count() + 1);
+        } else if ("h2".equalsIgnoreCase(dbType) && getJpaRepo() != null) {
             return (int) (getJpaRepo().count() + 1);
         } else {
             return 1;
@@ -357,6 +443,13 @@ public class QuoteController {
     private QuoteH2Repository getJpaRepo() {
         try {
             return ctx.getBean(QuoteH2Repository.class);
+        } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
+            return null;
+        }
+    }
+    private QuotePostgresRepository getPostgresRepo() {
+        try {
+            return ctx.getBean(QuotePostgresRepository.class);
         } catch (org.springframework.beans.factory.NoSuchBeanDefinitionException ex) {
             return null;
         }

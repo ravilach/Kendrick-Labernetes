@@ -215,13 +215,18 @@ const App: React.FC = () => {
           )}
         </div>
       </div>
+      {showAdmin && (
+        <div style={{ marginTop: 32 }}>
+          <Admin />
+        </div>
+      )}
+
       <footer style={{ marginTop: 48, borderTop: '1px solid #fff', paddingTop: 16, opacity: 0.95 }}>
         <div style={{ marginTop: 32, textAlign: 'center' }}>
           <a href="/api-docs.html" target="_blank" rel="noopener noreferrer" style={{ color: '#baffba', fontWeight: 700, fontSize: 18, textDecoration: 'underline' }}>
             API Docs
           </a>
         </div>
-        {showAdmin && <Admin />}
       </footer>
     </div>
   );
